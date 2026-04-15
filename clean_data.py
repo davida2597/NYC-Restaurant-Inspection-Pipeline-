@@ -2,6 +2,7 @@
 
 import os
 import io
+import time
 import pandas as pd
 from supabase import create_client
 from dotenv import load_dotenv
@@ -31,7 +32,7 @@ CLEAN_BUCKET = "cleaned_data_csv"
 
 CLEAN_MODE = "all"  # or "recent"
 RECENT_HOURS = 23
-MAX_WORKERS = 5
+MAX_WORKERS = 3 # Supabase limits query requests, so we keep this low to avoid hitting rate limits. Adjust as needed.
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -103,6 +104,8 @@ def process_file(filename):
     """Full ETL for one file."""
     try:
         print(f"[START] {filename}")
+
+        time.sleep(0.5) # Small delay to help avoid hitting Supabase rate limits
 
         df = download_csv(filename)
         df = run_pipeline(df)
