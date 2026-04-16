@@ -90,18 +90,16 @@ These visualizations allow users to identify patterns such as:
 
 ## Technologies Used
 
-This project uses the following tools and libraries:
+This project uses the following main tools:
 
 - **Python**
 - **Supabase** - cloud file and database storage
 - **Github Actions** - autonomous pipeline updates
+- **Psycopg 3** - supabase connector
 - **Pandas** – data cleaning and manipulation
-- **NumPy** – numerical operations
 - **Streamlit** – interactive dashboard
 - **Streamlit Community Cloud** - cloud accessible dashboard environment
 - **NYC Open Data API**
-
-(Modify this section depending on the exact tools used.)
 
 ---
 
