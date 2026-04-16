@@ -9,15 +9,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Cleaning functions
-from cleaning.validate_types import validate_types
-from cleaning.strip_whitespace import strip_whitespace
-from cleaning.remove_duplicates import remove_duplicates
-from cleaning.parse_dates import parse_dates
-from cleaning.normalize_nulls import normalize_nulls
-from cleaning.normalize_ids import normalize_ids
-from cleaning.normalize_caps import normalize_caps
-from cleaning.drop_nulls import drop_nulls
+from cleaning import *
 
 # -----------------------------
 # ENV + CLIENT
@@ -39,13 +31,19 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 # -----------------------------
 # PIPELINE
 # -----------------------------
-CLEANING_PIPELINE = [
+CLEANING_PIPELINE = [ # Order matters!
+    enforce_column_layout,
     normalize_nulls,
     strip_whitespace,
+    normalize_whitespace,
     normalize_caps,
+    normalize_boro,
+    normalize_coords,
     parse_dates,
+    infer_dates,
+    infer_grades,
+    clean_phone,
     validate_types,
-    normalize_ids,
     drop_nulls,
     remove_duplicates,
 ]
