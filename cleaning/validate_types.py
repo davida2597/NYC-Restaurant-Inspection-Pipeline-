@@ -1,46 +1,76 @@
 import pandas as pd
 
-
-# Map column name fragments → target dtype.
-NUMERIC_KEYWORDS = ("amount", "value", "price", "count", "total", "qty", "quantity",
-                    "score", "rate", "latitude", "longitude", "age",
-                    "size", "weight", "height", "length", "width")
-
-BOOL_KEYWORDS = ("is_", "has_", "flag", "active", "enabled", "deleted")
-
-
 def validate_types(df: pd.DataFrame) -> pd.DataFrame:
-    """Coerces numeric columns to float and boolean columns to bool; drops rows with invalid values."""
-    before = len(df)
-    invalid_mask = pd.Series(False, index=df.index)
+    """
+    Enforces strict column types and removes invalid rows.
 
-    # Support both pandas 2 (object) and pandas 3 (str dtype)
-    string_cols = (
-        set(df.select_dtypes(include="object").columns)
-        | set(df.select_dtypes(include="str").columns)
-    )
+    Rules:
+    - Column order must match expected schema
+    - Type mismatches -> row dropped
+    - NA allowed everywhere
+    """
 
-    for col in df.columns:
-        col_lower = col.lower()
+    df = df.copy()
 
-        if any(kw in col_lower for kw in NUMERIC_KEYWORDS):
-            coerced = pd.to_numeric(df[col], errors="coerce")
-            newly_invalid = coerced.isna() & df[col].notna()
-            if newly_invalid.any():
-                print(f"  validate_types: {newly_invalid.sum()} unparseable value(s) in '{col}'")
-            invalid_mask |= newly_invalid
-            df[col] = coerced
+    # -----------------------------
+    # Expected schema (by position)
+    # -----------------------------
+    expected_types = [
+        "int", "str", "str", "str", "str",
+        "int", "int", "str",
+        "date",
+        "str", "str", "str", "str",
+        "int",
+        "char",
+        "date", "date",
+        "str",
+        "float", "float",
+        "int", "int", "int", "int", "int",
+        "str", "str"
+    ]
 
-        elif any(kw in col_lower for kw in BOOL_KEYWORDS):
-            if col in string_cols:
-                df[col] = df[col].map(
-                    {"true": True, "false": False, "1": True, "0": False,
-                     "yes": True, "no": False, True: True, False: False}
-                )
+    if len(df.columns) != len(expected_types):
+        raise ValueError("Column count does not match expected schema")
 
-    df = df[~invalid_mask]
-    dropped = before - len(df)
-    if dropped:
-        print(f"  validate_types: removed {dropped} rows with invalid type values")
+    # Force datetime parsing for date columns
+    date_indices = [i for i, t in enumerate(expected_types) if t == "date"]
+    for i in date_indices:
+        col = df.columns[i]
+        df[col] = pd.to_datetime(df[col], format="%Y-%m-%d", errors="coerce")
 
-    return df
+
+    # -----------------------------
+    # Row validation mask
+    # -----------------------------
+    valid_mask = pd.Series(True, index=df.index)
+
+    for i, (col, typ) in enumerate(zip(df.columns, expected_types)):
+
+        series = df[col]
+
+        # -------------------------
+        # Type checks
+        # -------------------------
+        if typ == "int":
+            coerced = pd.to_numeric(series, errors="coerce")
+            valid_mask &= coerced.notna() | series.isna()
+
+        elif typ == "float":
+            coerced = pd.to_numeric(series, errors="coerce")
+            valid_mask &= coerced.notna() | series.isna()
+
+        elif typ == "str":
+            valid_mask &= series.isna() | series.astype(str).apply(lambda x: isinstance(x, str))
+
+        elif typ == "char":
+            valid_mask &= series.isna() | series.astype(str).apply(lambda x: len(str(x)) == 1)
+
+        elif typ == "date":
+            valid_mask &= series.isna() | pd.to_datetime(series, errors="coerce").notna()
+
+    # -----------------------------
+    # Apply filter
+    # -----------------------------
+    cleaned_df = df[valid_mask].copy()
+
+    return cleaned_df

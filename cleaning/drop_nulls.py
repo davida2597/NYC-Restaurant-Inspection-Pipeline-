@@ -3,7 +3,7 @@ import pandas as pd
 
 # Add the column names that must be present for a row to be considered valid.
 # If left empty, the function drops rows where ALL columns are null.
-REQUIRED_COLUMNS: list[str] = []
+REQUIRED_COLUMNS: list[str] = ['camis', 'dba']  # These fields must not be null
 
 
 def drop_nulls(df: pd.DataFrame) -> pd.DataFrame:
