@@ -1,0 +1,150 @@
+# =============================================================================
+# .github/workflows/update_pipeline.yml
+#
+# Daily pipeline workflow — fetches new inspection data, cleans it, and
+# ports it into the Supabase database automatically every day.
+#
+# HOW THIS FILE WORKS
+# -------------------
+# GitHub watches the .github/workflows/ folder in your repo. Any .yml file
+# here is automatically registered as a workflow — no extra setup needed.
+# Just push this file and the schedule activates immediately.
+#
+# PASSING DATA BETWEEN STEPS
+# ---------------------------
+# Each step runs in its own shell but shares an environment file ($GITHUB_ENV).
+# fetch_new.py writes the output filename to $GITHUB_ENV like this:
+#     echo "TARGET_FILE=2024-07-01_2024-07-15.csv" >> $GITHUB_ENV
+# Every step AFTER that can then read it as ${{ env.TARGET_FILE }}.
+# This is how clean_data.py and port_data.py know which file to process.
+#
+# SECRETS
+# -------
+# Secrets are stored in GitHub → repo Settings → Secrets and variables →
+# Actions → New repository secret. They are injected as environment
+# variables at runtime and are never visible in logs.
+#
+# Required secrets (add all of these before the first run):
+#   SUPABASE_URL             Your Supabase project URL
+#   SUPABASE_KEY             Your sb_publishable_... key
+#   SUPABASE_SECRET_KEY      Your sb_secret_... key
+#   DATABASE_URL             Supavisor session pooler connection string
+#   API_APP_TOKEN            Your NYC Open Data app token
+# =============================================================================
+
+name: Daily pipeline update
+
+on:
+  # -----------------------------------------------------------------------
+  # Scheduled trigger — runs every day at 06:00 UTC (01:00 AM US Central).
+  # Cron syntax: minute hour day-of-month month day-of-week
+  # -----------------------------------------------------------------------
+  schedule:
+    - cron: '0 6 * * *'
+
+  # -----------------------------------------------------------------------
+  # Manual trigger — adds a "Run workflow" button in the GitHub Actions tab
+  # so you can kick off a run any time without waiting for the schedule.
+  # Use this to test the workflow after first setting it up.
+  # -----------------------------------------------------------------------
+  workflow_dispatch:
+
+jobs:
+  update:
+    name: Fetch → Clean → Port
+    runs-on: ubuntu-latest
+
+    # If a scheduled run is still going when the next one fires (unlikely
+    # for this pipeline, but good practice), cancel the older run.
+    concurrency:
+      group: daily-pipeline
+      cancel-in-progress: true
+
+    steps:
+
+      # -------------------------------------------------------------------
+      # 1. Check out the latest code from the main branch.
+      #    Without this step, the runner has no access to your scripts.
+      # -------------------------------------------------------------------
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # -------------------------------------------------------------------
+      # 2. Install Python 3.11.
+      # -------------------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # -------------------------------------------------------------------
+      # 3. Install all Python dependencies from requirements.txt.
+      #    Cache the pip packages so repeat runs are faster.
+      # -------------------------------------------------------------------
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # -------------------------------------------------------------------
+      # 4. Run fetch_new.py.
+      #
+      #    This script:
+      #      - Queries MAX(record_date) from the database
+      #      - Fetches all records newer than that date from the API
+      #      - Uploads the result as a CSV to Supabase Storage (raw bucket)
+      #      - Writes TARGET_FILE=<filename> to $GITHUB_ENV so the next
+      #        steps know which file to process
+      #
+      #    If no new data exists, the script exits cleanly with code 0
+      #    and sets TARGET_FILE to an empty string. Steps 5 and 6 check
+      #    for this and skip gracefully.
+      # -------------------------------------------------------------------
+      - name: Fetch new data
+        env:
+          API_BASE_URL:        https://data.cityofnewyork.us/resource/43nn-pn8j.json
+          API_APP_TOKEN:       ${{ secrets.API_APP_TOKEN }}
+          API_BATCH_SIZE:      1000
+          API_REQUEST_DELAY:   0.5
+          FETCH_ALL_START_DATE: 2010-01-01
+          API_DATE_FIELD:      inspection_date
+          SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:        ${{ secrets.SUPABASE_KEY }}
+          DATABASE_URL:        ${{ secrets.DATABASE_URL }}
+          RAW_BUCKET:          raw
+        run: python fetch_new.py
+
+      # -------------------------------------------------------------------
+      # 5. Run clean_data.py using the file produced by fetch_new.py.
+      #
+      #    TARGET_FILE is read from the environment (set in step 4).
+      #    If TARGET_FILE is empty (no new data), this step is skipped.
+      # -------------------------------------------------------------------
+      - name: Clean data
+        if: env.TARGET_FILE != ''
+        env:
+          SUPABASE_URL:    ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:    ${{ secrets.SUPABASE_KEY }}
+          RAW_BUCKET:      raw
+          CLEANED_BUCKET:  cleaned
+          TARGET_FILE:     ${{ env.TARGET_FILE }}
+        run: python clean_data.py
+
+      # -------------------------------------------------------------------
+      # 6. Run port_data.py using the cleaned file from step 5.
+      #
+      #    Uses ON CONFLICT DO NOTHING so duplicate rows are silently
+      #    skipped even if the same file is accidentally ported twice.
+      #    Requires the secret key to write to the database.
+      # -------------------------------------------------------------------
+      - name: Port data into database
+        if: env.TARGET_FILE != ''
+        env:
+          SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:        ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          DATABASE_URL:        ${{ secrets.DATABASE_URL }}
+          CLEANED_BUCKET:      cleaned
+          RECORDS_TABLE:       inspections
+          TARGET_FILE:         ${{ env.TARGET_FILE }}
+        run: python port_data.py
