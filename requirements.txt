@@ -1,5 +1,16 @@
+# Core data pipeline
 pandas==2.2.1
-supabase==2.28.3
 requests==2.33.0
-psycopg==3.3.3
 python-dotenv==1.2.2
+
+# Database
+psycopg==3.3.3           # psycopg3 — used directly by etl.py, port_data.py, setup_db.py
+psycopg-binary==3.3.3    # compiled C extension for psycopg3 (required by SQLAlchemy)
+sqlalchemy==2.0.36        # used by streamlit_app.py to query PostgreSQL
+
+# Supabase (production pipeline only — not needed for Docker)
+supabase==2.28.3
+
+# Dashboard
+streamlit==1.41.1
+plotly==5.24.1

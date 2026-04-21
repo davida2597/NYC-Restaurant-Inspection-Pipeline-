@@ -8,8 +8,8 @@ def normalize_whitespace(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.copy()
 
-    # Only operate on string/object columns
-    str_cols = df.select_dtypes(include="str").columns
+    # pandas 2.x stores strings as object dtype; include="str" is invalid there.
+    str_cols = df.select_dtypes(include="object").columns
 
     for col in str_cols:
         df[col] = df[col].apply(lambda x: " ".join(x.split()) if isinstance(x, str) else x)
