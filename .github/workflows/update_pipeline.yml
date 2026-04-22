@@ -13,7 +13,7 @@
 # PASSING DATA BETWEEN STEPS
 # ---------------------------
 # Each step runs in its own shell but shares an environment file ($GITHUB_ENV).
-# fetch_new.py writes the output filename to $GITHUB_ENV like this:
+# fetch_data.py writes the output filename to $GITHUB_ENV like this:
 #     echo "TARGET_FILE=2024-07-01_2024-07-15.csv" >> $GITHUB_ENV
 # Every step AFTER that can then read it as ${{ env.TARGET_FILE }}.
 # This is how clean_data.py and port_data.py know which file to process.
@@ -70,12 +70,12 @@ jobs:
         uses: actions/checkout@v4
 
       # -------------------------------------------------------------------
-      # 2. Install Python 3.11.
+      # 2. Install Python 3.13.3.
       # -------------------------------------------------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13.3'
 
       # -------------------------------------------------------------------
       # 3. Install all Python dependencies from requirements.txt.
@@ -100,7 +100,7 @@ jobs:
       #    and sets TARGET_FILE to an empty string. Steps 5 and 6 check
       #    for this and skip gracefully.
       # -------------------------------------------------------------------
-      - name: Fetch new data
+      - name: Fetch data
         env:
           API_BASE_URL:        https://data.cityofnewyork.us/resource/43nn-pn8j.json
           API_APP_TOKEN:       ${{ secrets.API_APP_TOKEN }}
@@ -112,7 +112,7 @@ jobs:
           SUPABASE_KEY:        ${{ secrets.SUPABASE_KEY }}
           DATABASE_URL:        ${{ secrets.DATABASE_URL }}
           RAW_BUCKET:          raw
-        run: python fetch_new.py
+        run: python fetch_data.py
 
       # -------------------------------------------------------------------
       # 5. Run clean_data.py using the file produced by fetch_new.py.
