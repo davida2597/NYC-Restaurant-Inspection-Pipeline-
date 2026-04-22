@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: local_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: local_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d local_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  etl:
+    build: ./etl
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: "no"
+
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/etl_done"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+    command: sh -c "python sync_supabase.py && touch /tmp/etl_done && sleep infinity"
+    
+  app:
+    build: ./app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      etl:
+        condition: service_healthy
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
