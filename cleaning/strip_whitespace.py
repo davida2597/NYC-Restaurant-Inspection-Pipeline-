@@ -3,14 +3,16 @@ import pandas as pd
 
 def strip_whitespace(df: pd.DataFrame) -> pd.DataFrame:
     """Strips leading/trailing whitespace from all string columns."""
-    # Support both pandas 2 (object) and pandas 3 (str dtype)
-    string_cols = (
-        set(df.select_dtypes(include="object").columns)
-        | set(df.select_dtypes(include="str").columns)
-    )
+    # select_dtypes(include="str") raises TypeError in pandas 2.x.
+    # Object dtype is how pandas 2.x stores string columns.
+    string_cols = set(df.select_dtypes(include="object").columns)
 
     for col in string_cols:
-        df[col] = df[col].str.strip()
+        # Guard: some object columns contain non-string values (e.g. dicts).
+        try:
+            df[col] = df[col].str.strip()
+        except AttributeError:
+            pass
 
     # Also normalize column names themselves
     df.columns = [c.strip() for c in df.columns]

@@ -10,16 +10,19 @@ NULL_STRINGS = {
 
 def normalize_nulls(df: pd.DataFrame) -> pd.DataFrame:
     """Converts empty strings and common null-like sentinels to None (pd.NA)."""
-    # Support both pandas 2 (object) and pandas 3 (str dtype)
-    string_cols = (
-        set(df.select_dtypes(include="object").columns)
-        | set(df.select_dtypes(include="str").columns)
-    )
+    # select_dtypes(include="str") raises TypeError in pandas 2.x.
+    # Object dtype is how pandas 2.x stores string columns.
+    string_cols = set(df.select_dtypes(include="object").columns)
 
     for col in string_cols:
-        df[col] = df[col].where(
-            ~df[col].str.strip().str.lower().isin(NULL_STRINGS),
-            other=None,
-        )
+        # Some object columns contain non-string values (e.g. dicts from the
+        # API's GeoJSON 'location' field). Skip those silently.
+        try:
+            df[col] = df[col].where(
+                ~df[col].str.strip().str.lower().isin(NULL_STRINGS),
+                other=None,
+            )
+        except (AttributeError, TypeError):
+            pass
 
     return df
