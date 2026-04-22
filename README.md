@@ -107,7 +107,7 @@ This project uses the following main tools:
 
 This project is continous, meaning it will continue to work until canceled. 
 
-To access the interactive dashboard querying our data, go to {insert link here}
+To access the interactive dashboard querying our data, go to https://878gbnn3cfkr8smrmovqrd.streamlit.app/
 
 ## Contributors
 
