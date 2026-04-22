@@ -2,9 +2,10 @@
 pandas==2.2.1
 supabase==2.28.3
 requests==2.33.0
-psycopg==3.3.3
-psycopg-binary==3.3.3
 python-dotenv==1.2.2
+
+# Database
+psycopg[binary]==3.3.3
 
 # Dashboard
 streamlit==1.41.1
