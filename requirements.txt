@@ -1,5 +1,6 @@
 # Data pipeline
 pandas==2.2.1
+numpy==1.26.4
 supabase==2.28.3
 requests==2.33.0
 python-dotenv==1.2.2
@@ -8,6 +9,6 @@ python-dotenv==1.2.2
 psycopg[binary]==3.3.3
 
 # Dashboard
-streamlit==1.41.1
-plotly==5.24.1
-sqlalchemy==2.0.36
+streamlit
+plotly
+sqlalchemy

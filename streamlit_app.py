@@ -19,7 +19,7 @@ All queries are written defensively:
     - Every query returns an empty DataFrame gracefully; the UI shows an
       info message rather than crashing
 
-Deploy to Streamlit Community Cloud:
+Deploy to Streamlit Community Cloud
     1. Push this file (and requirements.txt) to GitHub
     2. Go to share.streamlit.io → New app → select this repo / file
     3. Under Advanced → Secrets, add:
