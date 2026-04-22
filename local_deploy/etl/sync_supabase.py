@@ -1,11 +1,15 @@
 import os
 import time
+import traceback
 import pandas as pd
 from supabase import create_client
 from sqlalchemy import create_engine, text
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+MAX_RETRIES = 5
+RETRY_DELAY = 5  # seconds
 
 TABLE_NAMES = ["inspections", "inspection_violations", "restaurants", "violations"]
 
@@ -59,5 +63,24 @@ def main():
 
     print("✅ ETL complete")
 
+def run_with_retries():
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            print(f"🚀 ETL attempt {attempt}/{MAX_RETRIES}")
+            main()
+            print("✅ ETL succeeded")
+            return
+
+        except Exception as e:
+            print(f"❌ ETL failed on attempt {attempt}")
+            print(str(e))
+            traceback.print_exc()
+
+            if attempt < MAX_RETRIES:
+                time.sleep(RETRY_DELAY * attempt)  # simple backoff
+            else:
+                print("💥 ETL failed permanently after max retries")
+                raise
+
 if __name__ == "__main__":
-    main()
+    run_with_retries()
