@@ -17,13 +17,13 @@ load_dotenv()
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 
-RAW_BUCKET = os.environ["RAW_BUCKET", "raw_data_csv"]
-CLEAN_BUCKET = os.environ["CLEANED_BUCKET", "cleaned_data_csv"]
+RAW_BUCKET = os.environ.get("RAW_BUCKET", "raw_data_csv")
+CLEAN_BUCKET = os.environ.get("CLEANED_BUCKET", "cleaned_data_csv")
 
 CLEAN_MODE = "all"  # or "recent"
 RECENT_HOURS = 23
 MAX_WORKERS = 3 # Supabase limits query requests, so we keep this low to avoid hitting rate limits. Adjust as needed.
-
+e
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # -----------------------------
