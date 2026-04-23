@@ -93,12 +93,6 @@ jobs:
       #      - Queries MAX(record_date) from the database
       #      - Fetches all records newer than that date from the API
       #      - Uploads the result as a CSV to Supabase Storage (raw bucket)
-      #      - Writes TARGET_FILE=<filename> to $GITHUB_ENV so the next
-      #        steps know which file to process
-      #
-      #    If no new data exists, the script exits cleanly with code 0
-      #    and sets TARGET_FILE to an empty string. Steps 5 and 6 check
-      #    for this and skip gracefully.
       # -------------------------------------------------------------------
       - name: Fetch data
         env:
@@ -117,18 +111,13 @@ jobs:
 
       # -------------------------------------------------------------------
       # 5. Run clean_data.py using the file produced by fetch_data.py.
-      #
-      #    TARGET_FILE is read from the environment (set in step 4).
-      #    If TARGET_FILE is empty (no new data), this step is skipped.
       # -------------------------------------------------------------------
       - name: Clean data
-        if: env.TARGET_FILE != ''
         env:
           SUPABASE_URL:    ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY:    ${{ secrets.SUPABASE_KEY }}
           RAW_BUCKET:      ${{ secrets.RAW_BUCKET   }}          
           CLEANED_BUCKET:  ${{ secrets.CLEANED_BUCKET }}
-          TARGET_FILE:     ${{ env.TARGET_FILE }}
         run: python clean_data.py
 
       # -------------------------------------------------------------------
