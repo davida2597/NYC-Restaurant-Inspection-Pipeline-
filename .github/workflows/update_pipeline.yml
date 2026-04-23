@@ -41,7 +41,6 @@ on:
   # -----------------------------------------------------------------------
   schedule:
     - cron: '0 6 * * *'
-  workflow_dispatch:
 
   # -----------------------------------------------------------------------
   # Manual trigger — adds a "Run workflow" button in the GitHub Actions tab
