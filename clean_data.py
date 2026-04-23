@@ -1,5 +1,3 @@
-# clean_data_parallel.py
-
 import os
 import io
 import time
@@ -19,8 +17,8 @@ load_dotenv()
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 
-RAW_BUCKET = "raw_data_csv"
-CLEAN_BUCKET = "cleaned_data_csv"
+RAW_BUCKET = os.environ["RAW_BUCKET", "raw_data_csv"]
+CLEAN_BUCKET = os.environ["CLEANED_BUCKET", "cleaned_data_csv"]
 
 CLEAN_MODE = "all"  # or "recent"
 RECENT_HOURS = 23
