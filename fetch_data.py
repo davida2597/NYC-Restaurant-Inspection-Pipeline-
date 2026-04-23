@@ -1,12 +1,12 @@
 """
-fetch_all.py
+fetch_data.py
 ------------
 One-time script that downloads the complete history of the NYC DOHMH
 Restaurant Inspection Results dataset in batches of 1000 rows, saving
 each date-window as a CSV in Supabase Storage (raw bucket).
 
 Usage:
-    python fetch_all.py
+    python fetch_data.py
 
 Requirements in .env:
     API_BASE_URL, API_APP_TOKEN, API_BATCH_SIZE, API_REQUEST_DELAY,
@@ -41,7 +41,7 @@ API_BATCH_SIZE    = int(os.environ.get("API_BATCH_SIZE", 1000))
 API_REQUEST_DELAY = float(os.environ.get("API_REQUEST_DELAY", 0.5))
 FETCH_BATCH_DAYS  = int(os.environ.get("FETCH_BATCH_DAYS", 90))
 FETCH_START_DATE  = os.environ.get("FETCH_ALL_START_DATE", "2020-01-01")
-RAW_BUCKET        = os.environ.get("RAW_BUCKET", "raw")
+RAW_BUCKET        = os.environ.get("RAW_BUCKET", "raw_data_csv")
 
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 DATABASE_URL = os.environ["DATABASE_URL"]
@@ -220,7 +220,7 @@ def main():
     remaining     = [w for w in all_windows if window_filename(*w) not in completed]
 
     print(f"\n{'='*60}")
-    print(f"  fetch_all.py")
+    print(f"  fetch_data.py")
     print(f"  Dataset  : NYC Restaurant Inspections (43nn-pn8j)")
     print(f"  Range    : {overall_start} → {overall_end}")
     print(f"  Windows  : {total} total, {len(remaining)} remaining")
