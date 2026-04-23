@@ -128,7 +128,6 @@ jobs:
       #    Requires the secret key to write to the database.
       # -------------------------------------------------------------------
       - name: Port data into database
-        if: env.TARGET_FILE != ''
         env:
           SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY:        ${{ secrets.SUPABASE_KEY }}
@@ -136,5 +135,4 @@ jobs:
           DATABASE_URL:        ${{ secrets.DATABASE_URL }}
           CLEANED_BUCKET:      ${{ secrets.CLEANED_BUCKET }}
           RECORDS_TABLE:       ${{ secrets.RECOORDS_TABLE }}
-          TARGET_FILE:         ${{ env.TARGET_FILE }}
         run: python port_data.py
