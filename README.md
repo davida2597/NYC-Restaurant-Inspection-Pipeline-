@@ -2,11 +2,11 @@
 
 ## Project Overview
 
-This project analyzes restaurant inspection data from the **New York City Department of Health and Mental Hygiene (DOHMH)** to identify patterns and potential correlations between restaurant inspection outcomes and environmental factors such as restaurant density, location, and public reviews.
+This project analyzes restaurant inspection data from the **New York City Department of Health and Mental Hygiene (DOHMH)** to identify patterns and potential trends for restaurant inspection outcomes.
 
 The core goal of this project is to provide an **interactive dashboard** that allows users to explore the inspection dataset visually and uncover trends using filters and data exploration tools.
 
-The dataset used in this project comes from the NYC Open Data portal:
+The dataset used in this project comes from the NYC Open Data portal API:
 
 https://data.cityofnewyork.us/d/43nn-pn8j
 
@@ -62,7 +62,6 @@ The general workflow of the project is:
    - Aggregate inspections by restaurant
    - Compute average inspection scores
    - Calculate restaurant density by region
-   - Merge inspection data with external review data (if applicable)
 
 4. **Data Visualization**
    - Build an interactive dashboard for exploration.
