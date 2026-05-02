@@ -104,7 +104,9 @@ This project uses the following main tools:
 
 ## How to use
 
-This project is continous, meaning it will continue to work until canceled. 
+Specifics on how exactly to setup and run the pipeline can be found in project_overview.ipynb.
+
+This pipeline project is continous for the NYC API, meaning it will continue to run, update, and display.
 
 To access the interactive dashboard querying our data, go to https://nyc-restaurant-inspection-dashboard.streamlit.app/
 
